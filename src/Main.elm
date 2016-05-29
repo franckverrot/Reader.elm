@@ -57,7 +57,7 @@ update msg model =
 addFeed : String -> Cmd Msg
 addFeed feedUrl =
   let response = Http.send defaultSettings (postNewFeedRequest feedUrl)
-      feed = fromJson feedDecoder response
+      feed = fromJson ("feed" := feedDecoder) response
   in
      Task.perform FeedCreationFailed FeedCreationSucceeded feed
 
@@ -87,30 +87,24 @@ getAllFeedsRequest feedUrl =
   , url = Config.feedsRESTUrl
   , body = empty }
 
+entryDecoder : Json.Decoder Entry
+entryDecoder = Json.object2 Entry
+                 ("title"   := Json.string)
+                 ("link"    := Json.string)
+
 feedDecoder : Json.Decoder Feed
 feedDecoder =
-  let makeFeed a b = Feed a b []
-  in  "feed" := (Json.object2 makeFeed
-                   ("url"  := Json.string)
-                   ("name" := Json.string))
+   Json.object3 Feed
+              ("url"     := Json.string)
+              ("name"    := Json.string)
+              ("entries" := Json.list entryDecoder)
 
 getFeeds : Cmd Msg
 getFeeds =
-  --let fetchFeed = Http.get feedsDecoder feedsRESTUrl
   let response  = Http.send defaultSettings (getAllFeedsRequest feedsRESTUrl)
       fetchFeed = fromJson feedsDecoder response
-  in
-     Task.perform FeedFetchFailed FeedFetchSucceeded fetchFeed
+  in Task.perform FeedFetchFailed FeedFetchSucceeded fetchFeed
 
 feedsDecoder : Json.Decoder FeedList
 feedsDecoder =
-  let makeFeed a b = Feed a b []
-      entry = Json.object2 Entry
-                ("title" := Json.string)
-                ("link" := Json.string)
-      feed = Json.object3 Feed
-                ("url" := Json.string)
-                ("name" := Json.string)
-                ("entries" := Json.list entry)
-  in
-     "feeds" := Json.list feed
+  "feeds" := Json.list feedDecoder
