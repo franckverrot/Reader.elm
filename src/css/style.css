@@ -1,0 +1,67 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+.faux-main {
+  display: flex;
+  min-height: 120vh;
+  height: 120vh;
+  flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.feed-items {
+}
+
+.feed-item {
+}
+
+.feed-item__name {font-size: 16px;}
+
+.feed-item__posts {
+
+}
+
+.feed-item__post-title {font-size: 16px;}
+
+.add-feed-form {
+    /* float: left; */
+}
+
+.feed-list {
+    /* float: left; */
+}
+
+.title-text {
+    float: left;
+}
+.user-profile {
+    float: right;
+}
+
+.main-view {
+}
+
+header {
+    /* height: 40px; */
+}
+
+footer {
+  flex: 2;
+  height: 80px;
+}
+
+.feed-list {
+    padding-left: 20px;
+}
+
+.feed-items {
+}
+
+.feed-item {
+    padding: 0 0 20px 20px;
+}
