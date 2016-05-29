@@ -40,17 +40,19 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     CreateFeed ->
-      ({model | newFeedInputString = ""}, addFeed model.newFeedInputString)
+      (model, addFeed model.newFeedInputString)
     FeedCreationFailed error ->
-      (model, Cmd.none)
+      ({ model | newFeedInputString = "" }, Cmd.none)
     FeedCreationSucceeded feed ->
-      ({ model | feeds = feed :: model.feeds }, Cmd.none)
+      ({ model | newFeedInputString = "", feeds = feed :: model.feeds }, Cmd.none)
     NewFeedInputChanged val ->
       ({ model | newFeedInputString = val }, Cmd.none)
     FeedFetchFailed error ->
       (model, Cmd.none)
     FeedFetchSucceeded feeds ->
       ({ model | feeds = feeds }, Cmd.none)
+    FeedSelected feed ->
+      ({ model | currentFeed = Just feed }, Cmd.none)
 
 addFeed : String -> Cmd Msg
 addFeed feedUrl =
@@ -78,6 +80,13 @@ postNewFeedRequest feedUrl =
      , body = Http.string body
      }
 
+getAllFeedsRequest : String -> Request
+getAllFeedsRequest feedUrl =
+  { verb = "GET"
+  , headers = jsonHeaders
+  , url = Config.feedsRESTUrl
+  , body = empty }
+
 feedDecoder : Json.Decoder Feed
 feedDecoder =
   let makeFeed a b = Feed a b []
@@ -87,15 +96,21 @@ feedDecoder =
 
 getFeeds : Cmd Msg
 getFeeds =
-  let fetchFeed = Http.get feedsDecoder feedsRESTUrl
+  --let fetchFeed = Http.get feedsDecoder feedsRESTUrl
+  let response  = Http.send defaultSettings (getAllFeedsRequest feedsRESTUrl)
+      fetchFeed = fromJson feedsDecoder response
   in
      Task.perform FeedFetchFailed FeedFetchSucceeded fetchFeed
 
-feedsDecoder : Json.Decoder FeedsList
+feedsDecoder : Json.Decoder FeedList
 feedsDecoder =
   let makeFeed a b = Feed a b []
-      feed = Json.object2 makeFeed
-                ("name" := Json.string)
+      entry = Json.object2 Entry
+                ("title" := Json.string)
+                ("link" := Json.string)
+      feed = Json.object3 Feed
                 ("url" := Json.string)
+                ("name" := Json.string)
+                ("entries" := Json.list entry)
   in
      "feeds" := Json.list feed

@@ -6,17 +6,18 @@ type Msg = CreateFeed
          | FeedCreationSucceeded Feed
          | NewFeedInputChanged String
          | FeedFetchFailed Http.Error
-         | FeedFetchSucceeded FeedsList
+         | FeedFetchSucceeded FeedList
+         | FeedSelected Feed
 
 type alias Feed =
   { url: String
   , name: String
-  , unreadPosts: List Post
+  , entries: (List Entry)
   }
 
-type alias Post =
+type alias Entry =
   { title: String
-  , content: String
+  , link: String
   }
 
 type alias User =
@@ -28,7 +29,9 @@ type alias Model =
   { currentUser: Maybe User
   , feeds: (List Feed)
   , newFeedInputString: String
+  , currentFeed: Maybe Feed
   , githubClientId: Maybe String
   }
 
-type alias FeedsList = List Feed
+type alias FeedList = List Feed
+type alias EntryList = List Entry

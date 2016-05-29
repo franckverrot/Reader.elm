@@ -8,17 +8,20 @@ import Html.Attributes exposing (..)
 import Types exposing (..)
 import Html.Events exposing (onClick, onInput)
 
-renderPost : Post -> Html Msg
-renderPost post =
-  div [ class "feed-item__post-title" ] [ text post.title ]
+renderEntry : Entry -> Html Msg
+renderEntry post =
+  div [ class "feed-item__post" ]
+    [ a [ href post.link, class "feed-item__post-title" ] [ text post.title ]
+    ]
 
 renderFeed : Feed -> Html Msg
 renderFeed feed =
-  let renderedPosts = List.map renderPost feed.unreadPosts
+  let renderedEntries = List.map renderEntry feed.entries
   in div [ class "feed-item" ]
-     [ div [ class "feed-item__name" ] [ text feed.name ]
-     , div [ class "feed-item__url" ] [ text feed.url ]
-     , div [ class "feed-item__posts" ] renderedPosts
+     [ span [ class "feed-item__name" ] [ text feed.name ]
+     , span [] [ text " " ]
+     , a [ href "#", class "feed-item__selector", onClick (FeedSelected feed) ] [ text ">>" ]
+     --, div [ class "feed-item__posts" ] renderedEntries
      ]
 
 headerView : Model -> Html Msg
@@ -29,7 +32,7 @@ headerView model =
 loginState : Model -> Html Msg
 loginState model =
   case model.currentUser of
-    Nothing     ->
+    Nothing ->
       case model.githubClientId of
         Nothing          -> div [ class "user-profile" ] [ text "No login permitted" ]
         (Just clientId) -> div [ class "user-profile" ] [ githubLogin clientId ]
@@ -42,11 +45,20 @@ footerView model =
 mainView : Model -> Html Msg
 mainView model =
   let renderedFeeds = List.map renderFeed model.feeds
-  in main' [ class "main-view" ] [
-       div [ class "feed-list" ] [
-        div [ class "add-feed-form" ] [ input [ onInput NewFeedInputChanged , placeholder "https://some.news/rss" ] [ text model.newFeedInputString ]
-                                        , button [ onClick CreateFeed ] [ text "Add Feed" ] ]
-       , div [ class "feed-items" ] renderedFeeds ] ]
+  in main' [ class "main-view" ] [ div [ class "feed-list" ] [
+                                     div [ class "add-feed-form" ] [ input [ onInput NewFeedInputChanged , placeholder "https://some.news/rss" ] [ text model.newFeedInputString ]
+                                                                   , button [ onClick CreateFeed ] [ text "Add Feed" ] ]
+                                   , div [ class "feed-items" ] renderedFeeds ]
+                                 , entryListView model ]
+
+entryListView : Model -> Html Msg
+entryListView model =
+  case model.currentFeed of
+    Nothing -> div [] [text "Please select a feed!"]
+    (Just feed) ->
+      let renderedEntries = List.map renderEntry feed.entries
+      in div [ class "post-list" ] [ h3 [] [ text feed.name ]
+                                   , div [] renderedEntries ]
 
 githubAuthorizeUrl : String -> String
 githubAuthorizeUrl clientId = "https://github.com/login/oauth/authorize?client_id=" ++ clientId ++ "&scope=user:email"
